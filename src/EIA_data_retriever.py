@@ -80,7 +80,7 @@ for region in eba_regions.keys():
 #
         csv_buffer = io.StringIO()
         temp_data[0].to_csv(csv_buffer)
-        s3.Object("nima-s3", "eia/EBA."+region+"-ALL."+siddict[ser]+"H.csv").put(Body=csv_buffer.getvalue())
+        s3.Object("nima-s3", "eia/EBA."+region+"-ALL."+siddict[ser]+".H.csv").put(Body=csv_buffer.getvalue())
 #
 #
 """
