@@ -73,14 +73,26 @@ def EIA_to_df(region,ser):
 # Make API calls.
 #
 for region in eba_regions.keys():
+    for ser in siddict.keys():
+        temp_data = []
+        temp_data.append(EIA_to_df(region,ser))
+#
+#
+        csv_buffer = io.StringIO()
+        temp_data[0].to_csv(csv_buffer)
+        s3.Object("nima-s3", "eia/EBA."+region+"-ALL."+siddict[ser]+"H.csv").put(Body=csv_buffer.getvalue())
+#
+#
+"""
+# Alternatively we can combine the data first and store it on S3.
+for region in eba_regions.keys():
     temp_data = []
     for ser in siddict.keys():
         temp_data.append(EIA_to_df(region,ser))
-    data = reduce(lambda left,right: pandas.merge(left,rightC,on='timestamp'), temp_data)
+    data = reduce(lambda left,right: pandas.merge(left,right,how='outer',on='timestamp'), temp_data)
 #
 #
     csv_buffer = io.StringIO()
     data.to_csv(csv_buffer)
     s3.Object("nima-s3", "eia/EBA."+region+"-ALL.H.csv").put(Body=csv_buffer.getvalue())
-#
-#
+    data.del()
