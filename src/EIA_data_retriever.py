@@ -96,3 +96,4 @@ for region in eba_regions.keys():
     data.to_csv(csv_buffer)
     s3.Object("nima-s3", "eia/EBA."+region+"-ALL.H.csv").put(Body=csv_buffer.getvalue())
     data.del()
+"""
