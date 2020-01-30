@@ -24,7 +24,7 @@ import pandas
 s3 = boto3.resource('s3')
 #
 #
-with open("/home/nima/git/insight_project/project_directory.txt","r") as pdir:
+with open("project_directory.txt","r") as pdir:
     project_folder = pdir.read().strip()
 #
 #
