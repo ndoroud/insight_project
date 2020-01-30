@@ -73,6 +73,11 @@ def nrel(region):
     return cache#.set_index('timestamp')
 #
 #
+def nerl_timestamp(tstamp):
+    if tstamp[5:10] != "02-29":
+        return "2010"+tstamp[4:]
+    else:
+        return "2010-02-28"+tstamp[10:]
 #
 #
 ###############################################################################
@@ -95,7 +100,7 @@ for region in eba_regions.keys():
     if index_range > 72 :
         for i in eia_data[72:].index:
             time_stamp = eia_data["timestamp"][i]
-            nl = nrel_data.index[nrel_data["timestamp"] == "2010"+time_stamp[4:]].tolist()[0]
+            nl = nrel_data.index[nrel_data["timestamp"] == nerl_timestamp(time_stamp)].tolist()[0]
             cur.execute("INSERT INTO data_{} (timestamp, dni, demand) VALUES \
                         ('{}','{}','{}')".format(region,time_stamp,nrel_data["dni"][nl],eia_data[region+"_demand"][i]))
         conn.commit()
