@@ -108,8 +108,8 @@ for region in eba_regions.keys():
         pass
     del nrel_data
 #
-    cache = cache(region)
-    latest_cache_entry = str(cache["timestamp"][0])
+    temp = cache(region)
+    latest_cache_entry = str(temp["timestamp"][0])
     lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
     for i in eia_data[0:lcei].index:
         time_stamp = str(eia_data["timestamp"][i])
@@ -119,8 +119,8 @@ for region in eba_regions.keys():
     if lcei < 72 :
         for i in eia_data[lcei:72].index:
             time_stamp = str(eia_data["timestamp"][i])
-            cache_index = cache.index[cache["timestamp"] == time_stamp].tolist()[0]
-            if cache["estimate"][cache_index] != eia_data[region+"_demand"][i]:
+            cache_index = temp.index[temp["timestamp"] == time_stamp].tolist()[0]
+            if temp["estimate"][cache_index] != eia_data[region+"_demand"][i]:
                 cur.execute("UPDATE cache_{} SET actual='{}' where timestamp='{}'".format(region,eia_data[region+"_demand"][i],time_stamp))
             else:
                 pass
