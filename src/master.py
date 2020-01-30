@@ -93,7 +93,7 @@ for region in eba_regions.keys():
 #
     nrel_data = nrel(region)
     eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+region+"-ALL.D.H.csv").drop("Unnamed: 0",axis=1)
-    eia_data = eia_data[eia_data['timestamp'] > latest_entry(region)["timestamp"].tolist()[0]]
+    eia_data = eia_data[eia_data['timestamp'] > str(latest_entry(region)["timestamp"][0])]
 #   eia_data = eia_data[eia_data['timestamp'] > "1900-01-01 00:00:00"]
     index_range = len(eia_data)
 #
@@ -110,7 +110,7 @@ for region in eba_regions.keys():
 #
     cache = cache(region)
     latest_cache_entry = cache["timestamp"].tolist()[0]
-    lcei = eia_data.index[eia_data["timestamp"] == str(latest_entry(region)["timestamp"][0])]
+    lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
     for i in eia_data[0:lcei].index:
         time_stamp = eia_data["timestamp"].tolist()[i]
         cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
