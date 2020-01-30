@@ -106,21 +106,24 @@ for region in eba_regions.keys():
     del nrel_data
 #
     cache = cache(region)
-    latest_cache_entry = cache["timestamp"][0]
-    lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
+#    latest_cache_entry = cache["timestamp"][0]
+    lcei = 72#eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
     for i in eia_data[0:lcei].index:
         time_stamp = eia_data["timestamp"][i]
         cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
                     ('{}','{}')".format(region,time_stamp,eia_data[region+"_demand"][i]))
         conn.commit()
-    for i in eia_data[lcei:72].index:
-        time_stamp = eia_data["timestamp"][i]
-        cache_index = cache.index[cache["timestamp"] == time_stamp].tolist()[0]
-        if cache["estimate"][cache_index] != eia_data[region+"_demand"][i]:
-            cur.execute("UPDATE cache_{} SET actual='{}' where timestamp='{}'".format(region,eia_data[region+"_demand"][i],time_stamp))
-        else:
-            pass
-    conn.commit()
+    if lcei < 72 :
+        for i in eia_data[lcei:72].index:
+            time_stamp = eia_data["timestamp"][i]
+            cache_index = cache.index[cache["timestamp"] == time_stamp].tolist()[0]
+            if cache["estimate"][cache_index] != eia_data[region+"_demand"][i]:
+                cur.execute("UPDATE cache_{} SET actual='{}' where timestamp='{}'".format(region,eia_data[region+"_demand"][i],time_stamp))
+            else:
+                pass
+        conn.commit()
+    else:
+        pass
 #
 #
 cur.close()
