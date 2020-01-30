@@ -113,12 +113,12 @@ def dni_data(file_id):
 conn = psycopg2.connect(settings)
 cur = conn.cursor()
 for region in eba_regions.keys():
-    cur.execute("CREATE TABLE nrel_{} (date date not null, hour time not null, DNI decimal not null)".format(region))
     region_data = []
+    cur.execute("CREATE TABLE nrel_{} (date date not null, hour time not null, DNI decimal not null)".format(region))
     for st in stations("CAR"):
         region_data.append(dni_data(st))
-        region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
-        region_data = region_data.mean(axis=1)
+    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
+    region_data = region_data.mean(axis=1)
     for i in region_data.index:
         cur.execute("INSERT INTO nrel_{} (date, hour, dni) VALUES \
                     ('{}','{}','{}')".format(region,region_data[[i]].keys()[0],int(region_data[i])))
