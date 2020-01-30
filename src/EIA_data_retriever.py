@@ -65,7 +65,7 @@ def EIA_call(region,ser):
 def EIA_to_df(region,ser):
     data = pandas.DataFrame(EIA_call(region,ser).json()['series'][0]['data']).set_axis(['timestamp', region+"_"+ser], axis='columns', inplace=False)
     data['timestamp'] = pandas.to_datetime(data['timestamp'],infer_datetime_format=True)
-    return _
+    return data
 #
 #
 #data = EIA_to_df(EIA_call())
