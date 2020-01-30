@@ -11,9 +11,9 @@ import boto3
 import io
 import json
 import pandas
-import psycopg2
 import requests
-from functools import reduce
+# import psycopg2
+# from functools import reduce
 #
 #
 s3 = boto3.resource('s3')
@@ -65,7 +65,7 @@ def EIA_call(region,ser):
 def EIA_to_df(region,ser):
     data = pandas.DataFrame(EIA_call(region,ser).json()['series'][0]['data']).set_axis(['timestamp', region+"_"+ser], axis='columns', inplace=False)
     data['timestamp'] = pandas.to_datetime(data['timestamp'],infer_datetime_format=True)
-    return data.set_index('timestamp')
+    return _
 #
 #
 #data = EIA_to_df(EIA_call())
@@ -74,17 +74,18 @@ def EIA_to_df(region,ser):
 #
 for region in eba_regions.keys():
     for ser in siddict.keys():
-        temp_data = []
-        temp_data.append(EIA_to_df(region,ser))
-#
-#
+        temp_data = EIA_to_df(region,ser)
         csv_buffer = io.StringIO()
-        temp_data[0].to_csv(csv_buffer)
+        temp_data.to_csv(csv_buffer)
         s3.Object("nima-s3", "eia/EBA."+region+"-ALL."+siddict[ser]+".H.csv").put(Body=csv_buffer.getvalue())
+        del temp_data
 #
 #
 """
-# Alternatively we can combine the data first and store it on S3.
+#
+# Alternatively we can combine the data first and store it on S3. Uncomment line 16 for "reduce" function.
+#
+#
 for region in eba_regions.keys():
     temp_data = []
     for ser in siddict.keys():
