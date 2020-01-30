@@ -99,7 +99,7 @@ for region in eba_regions.keys():
             time_stamp = eia_data["timestamp"][i]
             nl = nrel_loc(nrel_data,time_stamp)
             cur.execute("INSERT INTO data_{} (timestamp, dni, demand) VALUES \
-                        ('{}','{}','{}')".format(region,time_stamp,nrel_cal["dni"][nl],eia_data[region+"_demand"][i]))
+                        ('{}','{}','{}')".format(region,time_stamp,nrel_data["dni"][nl],eia_data[region+"_demand"][i]))
         conn.commit()
     else:
         pass
