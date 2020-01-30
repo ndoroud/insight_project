@@ -73,8 +73,6 @@ def nrel(region):
     return cache#.set_index('timestamp')
 #
 #
-def nrel_loc(nreld,tstamp):
-    nreld.index[nreld["timestamp"] == "2010"+tstamp[4:]].tolist()[0]
 #
 #
 ###############################################################################
@@ -97,7 +95,7 @@ for region in eba_regions.keys():
     if index_range > 72 :
         for i in eia_data[72:].index:
             time_stamp = eia_data["timestamp"][i]
-            nl = nrel_loc(nrel_data,time_stamp)
+            nl = nrel_data.index[nrel_data["timestamp"] == "2010"+time_stamp[4:]].tolist()[0]
             cur.execute("INSERT INTO data_{} (timestamp, dni, demand) VALUES \
                         ('{}','{}','{}')".format(region,time_stamp,nrel_data["dni"][nl],eia_data[region+"_demand"][i]))
         conn.commit()
