@@ -15,16 +15,16 @@ import boto3
 import psycopg2
 import json
 import pandas
-import datetime
-from io import StringIO
-from functools import reduce
+#import datetime
+#from io import StringIO
+#from functools import reduce
 # import requests
 #
 #
 s3 = boto3.resource('s3')
 #
 #
-with open("project_directory.txt","r") as pdir:
+with open("/home/nima/git/insight_project/project_directory.txt","r") as pdir:
     project_folder = pdir.read().strip()
 #
 #
@@ -93,13 +93,13 @@ for region in eba_regions.keys():
 #
     nrel_data = nrel(region)
     eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+region+"-ALL.D.H.csv").drop("Unnamed: 0",axis=1)
-    eia_data = eia_data[eia_data['timestamp'] > latest_entry(region)]
-#    eia_data = eia_data[eia_data['timestamp'] > "1900-01-01 00:00:00"]
+    eia_data = eia_data[eia_data['timestamp'] > latest_entry(region)["timestamp"].tolist()[0])]
+#   eia_data = eia_data[eia_data['timestamp'] > "1900-01-01 00:00:00"]
     index_range = len(eia_data)
 #
     if index_range > 72 :
         for i in eia_data[72:].index:
-            time_stamp = eia_data["timestamp"][i]
+            time_stamp = eia_data["timestamp"].tolist()[i]
             nl = nrel_data.index[nrel_data["timestamp"] == nerl_timestamp(time_stamp)].tolist()[0]
             cur.execute("INSERT INTO data_{} (timestamp, dni, demand) VALUES \
                         ('{}','{}','{}')".format(region,time_stamp,nrel_data["dni"][nl],eia_data[region+"_demand"][i]))
@@ -109,16 +109,16 @@ for region in eba_regions.keys():
     del nrel_data
 #
     cache = cache(region)
-    latest_cache_entry = cache["timestamp"][0]
+    latest_cache_entry = cache["timestamp"].tolist()[0]
     lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
     for i in eia_data[0:lcei].index:
-        time_stamp = eia_data["timestamp"][i]
+        time_stamp = eia_data["timestamp"].tolist()[i]
         cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
                     ('{}','{}')".format(region,time_stamp,eia_data[region+"_demand"][i]))
         conn.commit()
     if lcei < 72 :
         for i in eia_data[lcei:72].index:
-            time_stamp = eia_data["timestamp"][i]
+            time_stamp = eia_data["timestamp"].tolist()[i]
             cache_index = cache.index[cache["timestamp"] == time_stamp].tolist()[0]
             if cache["estimate"][cache_index] != eia_data[region+"_demand"][i]:
                 cur.execute("UPDATE cache_{} SET actual='{}' where timestamp='{}'".format(region,eia_data[region+"_demand"][i],time_stamp))
