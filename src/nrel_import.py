@@ -121,7 +121,7 @@ for region in eba_regions.keys():
     region_data = region_data.mean(axis=1)
     for i in region_data.index:
         cur.execute("INSERT INTO nrel_{} (date, hour, dni) VALUES \
-                    ('{}','{}','{}')".format(region,region_data[[i]].keys()[0],int(region_data[i])))
+                    ('{}','{}')".format(region,region_data[[i]].keys()[0],int(region_data[i])))
     conn.commit()
     del region_data
 cur.close()
