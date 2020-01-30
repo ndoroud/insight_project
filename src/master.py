@@ -56,21 +56,25 @@ def latest_entry(region):
     cur.execute("select * from data_{} order by timestamp desc limit 1".format(region))
     last_entry = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'dni','value'], axis='columns', inplace=False)
     last_entry['timestamp'] = pandas.to_datetime(last_entry['timestamp'],infer_datetime_format=True)
-    return last_entry.set_index('timestamp')
+    return last_entry#.set_index('timestamp')
 #
 #
 def cache(region):
     cur.execute("select * from cache_{} order by timestamp desc limit 72".format(region))
     cache = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'value','estimate'], axis='columns', inplace=False)
     cache['timestamp'] = pandas.to_datetime(cache['timestamp'],infer_datetime_format=True)
-    return cache.set_index('timestamp')
+    return cache#.set_index('timestamp')
 #
 #
 def nrel(region):
     cur.execute("select * from nrel_{} order by timestamp desc".format(region))
-    cache = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'value','estimate'], axis='columns', inplace=False)
+    cache = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'dni'], axis='columns', inplace=False)
     cache['timestamp'] = pandas.to_datetime(cache['timestamp'],infer_datetime_format=True)
-    return cache.set_index('timestamp')
+    return cache#.set_index('timestamp')
+#
+#
+def nrel_loc(nreld,tstamp):
+    nreld.index[nreld["timestamp"] == "2010"+tstamp[4:]].tolist()[0]
 #
 #
 ###############################################################################
@@ -78,7 +82,50 @@ def nrel(region):
 # Query the database for the latest enteries in the main table and
 # rolling window table
 #
-
+conn = psycopg2.connect(settings)
+cur = conn.cursor()
+#
+#
+for region in eba_regions.keys():
+#
+    nrel_data = nrel(region)
+    eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+region+"-ALL.D.H.csv").drop("Unnamed: 0",axis=1)
+#   eia_data = eia_data[eia_data['timestamp'] > latest_entry(region)]
+    eia_data = eia_data[eia_data['timestamp'] > "1900-01-01 00:00:00"]
+    index_range = len(eia_data)
+#
+    if index_range > 72 :
+        for i in eia_data[72:].index:
+            time_stamp = eia_data["timestamp"][i]
+            nl = nrel_loc(nrel_data,time_stamp)
+            cur.execute("INSERT INTO data_{} (timestamp, dni, demand) VALUES \
+                        ('{}','{}','{}')".format(region,time_stamp,nrel_cal["dni"][nl],eia_data[region+"_demand"][i]))
+        conn.commit()
+    else:
+        pass
+    del nrel_data
+#
+    cache = cache(region)
+    latest_cache_entry = cache["timestamp"][0]
+    lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
+    for i in eia_data[0:lcei].index:
+        time_stamp = eia_data["timestamp"][i]
+        cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
+                    ('{}','{}')".format(region,time_stamp,eia_data[region+"_demand"][i]))
+        conn.commit()
+    for i in eia_data[lcei:72].index:
+        time_stamp = eia_data["timestamp"][i]
+        cache_index = cache.index[cache["timestamp"] == time_stamp].tolist()[0]
+        if cache["estimate"][cache_index] != eia_data[region+"_demand"][i]:
+            cur.execute("UPDATE cache_{} SET actual='{}' where timestamp='{}'".format(region,eia_data[region+"_demand"][i],time_stamp))
+        else:
+            pass
+    conn.commit()
+#
+#
+cur.close()
+conn.close()
+"""
 conn = psycopg2.connect(settings)
 cur = conn.cursor()
 #
@@ -91,3 +138,4 @@ for region in eba_regions.keys():
 #
 cur.close()
 conn.close()
+"""
