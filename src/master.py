@@ -86,7 +86,7 @@ cur = conn.cursor()
 for region in eba_regions.keys():
     cur.execute("create table data_{} (timestamp timestamp primary key, dni int not null, demand int not null)".format(region))
     cur.execute("create table cache_{} (timestamp timestamp primary key, estimate int not null, actual int)".format(region))
-conn.commit()
+    conn.commit()
 #
 #
 cur.close()
