@@ -110,7 +110,7 @@ for region in eba_regions.keys():
 #
     cache = cache(region)
     latest_cache_entry = cache["timestamp"].tolist()[0]
-    lcei = eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
+    lcei = eia_data.index[eia_data["timestamp"] == str(latest_entry(region)["timestamp"][0])]
     for i in eia_data[0:lcei].index:
         time_stamp = eia_data["timestamp"].tolist()[i]
         cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
