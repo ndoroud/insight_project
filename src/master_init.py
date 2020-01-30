@@ -108,9 +108,9 @@ for region in eba_regions.keys():
         pass
     del nrel_data
 #
-#    cache = cache(region)
-#    latest_cache_entry = cache["timestamp"][0]
-    lcei = 72#eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
+#   cache = cache(region)
+#   latest_cache_entry = cache["timestamp"][0]
+    lcei = 72 #eia_data.index[eia_data["timestamp"] == latest_cache_entry].tolist()[0]
     for i in eia_data[0:lcei].index:
         time_stamp = eia_data["timestamp"][i]
         cur.execute("INSERT INTO cache_{} (timestamp, estimate) VALUES \
