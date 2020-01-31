@@ -79,7 +79,7 @@ def EIA_to_df(region,ser):
 #
 # Make API calls.
 #
-start_time = str(current_time())
+start_time = str(current_time("s"))
 for region in eba_regions:
     temp_data = []
     for ser in siddict.keys():
@@ -91,11 +91,11 @@ for region in eba_regions:
     data.to_csv(csv_buffer)
     s3.Object("nima-s3", "eia/EBA."+region+"-ALL.H.csv").put(Body=csv_buffer.getvalue())
     del data
-end_time = str(current_time())
+end_time = str(current_time("s"))
 
 #
 # Log:
-with open("eia_logs.csv","a") as log_file:
+with open(project_dir+"/logs/eia_logs.csv","a") as log_file:
     log_file.write(start_time+", "+end_time+"\n")
 #
 #
