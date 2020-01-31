@@ -9,14 +9,11 @@ January 2020
 #
 import os
 import boto3
-import io
-import json
 import pandas
-import requests
 import psycopg2
 from datetime import datetime
-from datetime import timedelta
 from functools import reduce
+from io import StringIO
 #
 # Call environment variables
 project_dir = os.getenv("project_dir")
@@ -116,6 +113,7 @@ def dni_data(file_id):
     return data.drop('time',axis=1).set_index('timestamp')
 #
 #
+start_time = str(current_time("s"))
 conn = psycopg2.connect("dbname=main "+psql_settings)
 cur = conn.cursor()
 for region in eba_regions.keys():
@@ -132,6 +130,11 @@ for region in eba_regions.keys():
     del region_data
 cur.close()
 conn.close()
+end_time = str(current_time("s"))
+
+# Log:
+with open(project_dir+"/logs/nrel_logs.csv","a") as log_file:
+    log_file.write(start_time+", "+end_time+"\n")
 
 ###############################################################################   
 ###############################################################################
