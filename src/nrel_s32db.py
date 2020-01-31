@@ -133,11 +133,11 @@ for region in eba_regions.keys():
         del station_data
     # Average GHI, DNI and WS over the stations
     region_data["ghi"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                 ghi_data.values()).mean(axis=1))
+                                                 ghi_data.values()).mean(axis=1)).set_axis(['ghi'],axis='columns',inplace=False)
     region_data["dni"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                 dni_data.values()).mean(axis=1))
+                                                 dni_data.values()).mean(axis=1)).set_axis(['dni'],axis='columns',inplace=False)
     region_data["ws"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                ws_data.values()).mean(axis=1))
+                                                ws_data.values()).mean(axis=1)).set_axis(['wind speed'],axis='columns',inplace=False)
     del ghi_data
     del dni_data
     del ws_data
