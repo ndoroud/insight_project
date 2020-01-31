@@ -132,14 +132,17 @@ for region in eba_regions.keys():
         ws_data[st_id] = station_data['ws_'+st_id]
         del station_data
     # Average GHI, DNI and WS over the stations
-    region_data["ghi"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ghi_data.values()).mean(axis=1)
-    region_data["dni"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), dni_data.values()).mean(axis=1)
-    region_data["ws"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data.values()).mean(axis=1)
-    # Merge into a single dataset
-    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
+    region_data["ghi"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
+                                                 ghi_data.values()).mean(axis=1)
+    region_data["dni"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\ 
+                                                 dni_data.values()).mean(axis=1))
+    region_data["ws"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
+                                                ws_data.values()).mean(axis=1))
     del ghi_data
     del dni_data
     del ws_data
+    # Merge into a single dataset
+    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
     # Export the result on the database
     region_data.to_sql("nrel_"+region,psql_engine)
     del region_data
