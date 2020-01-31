@@ -138,11 +138,11 @@ for region in eba_regions.keys():
     region_data.append(dni_data.mean(axis=1))
     ws_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data)
     region_data.append(ws_data.mean(axis=1))
+    # Merge into a single dataset
+    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
     del ghi_data
     del dni_data
     del ws_data
-    # Merge into a single dataset
-    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
     # Export the result on the database
     region_data.to_sql("nrel_"+region,psql_engine)
     del region_data
