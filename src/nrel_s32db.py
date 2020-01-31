@@ -116,7 +116,7 @@ def dni_data(file_id):
     return data.drop('time',axis=1).set_index('timestamp')
 #
 #
-conn = psycopg2.connect(settings)
+conn = psycopg2.connect("dbname=main "+psql_settings)
 cur = conn.cursor()
 for region in eba_regions.keys():
     region_data = []
