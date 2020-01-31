@@ -10,10 +10,12 @@ January 2020
 import os
 import boto3
 import pandas
-import psycopg2
-from datetime import datetime
-from functools import reduce
+# import psycopg2 # sqlalchemy is a good alternative
 from io import StringIO
+from datetime import datetime
+from datetime import timedelta
+from functools import reduce
+from sqlalchemy import create_engine
 #
 # Call environment variables
 project_dir = os.getenv("project_dir")
@@ -96,10 +98,10 @@ def to_datetime24(timestamp,year='2010'):
         return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M')
     elif timestamp[0:5] != '12/31':
         timestamp = timestamp[0:6] + year +'00' + timestamp[12:]
-        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + datetime.timedelta(days=1)
+        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + timedelta(days=1)
     else:
         timestamp = timestamp[0:6] + year +'00' + timestamp[12:]
-        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + datetime.timedelta(days=-364)
+        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + timedelta(days=-364)
 #
 #
 def from_s3(file_id):
@@ -107,29 +109,40 @@ def from_s3(file_id):
             key="nrel/"+file_id+"TYA.CSV").get()['Body'].read().decode("utf-8").split("\r\n")[1:])))
 #
 #
-def dni_data(file_id):
-    data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time','dni '+file_id], axis='columns', inplace=False)
+def nrel_data(file_id):
+    data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time', 'ghi_'+file_id, \
+                                                                'dni_'+file_id, 'ws_'+file_id], axis='columns', inplace=False)
     data['timestamp'] = (data['timestamp']+data['time']).apply(to_datetime24)
     return data.drop('time',axis=1).set_index('timestamp')
 #
 #
 start_time = str(current_time("s"))
-conn = psycopg2.connect("dbname=main "+psql_settings)
-cur = conn.cursor()
+psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/main')
+#
 for region in eba_regions.keys():
-    region_data = []
-    cur.execute("CREATE TABLE nrel_{} (timestamp timestamp primary key, DNI int not null)".format(region))
-    for st in stations("CAR"):
-        region_data.append(dni_data(st))
-    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
-    region_data = region_data.mean(axis=1)
-    for i in region_data.index:
-        cur.execute("INSERT INTO nrel_{} (timestamp, dni) VALUES \
-                    ('{}','{}')".format(region,region_data[[i]].keys()[0],int(region_data[i])))
-    conn.commit()
+    # Commit data from all the stations in the region to memory
+    ghi_data = []
+    dni_data = []
+    ws_data = []
+    for st_id in stations(region):
+        station_data = nrel_data(st_id)
+        ghi_data.append(station_data['ghi_'+st_id])
+        dni_data.append(station_data['dni_'+st_id])
+        ws_data.append(station_data['ws_'+st_id])
+        del station_data
+    # Average GHI, DNI and WS over the stations
+    ghi_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ghi_data).mean(axis=1)
+    dni_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), dni_data).mean(axis=1)
+    ws_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data).mean(axis=1)
+    # Merge into a single dataset
+    region_data = reduce(lambda left,right: pandas.merge(left,right,on['timestamp']), [ghi_data, dni_data, ws_data])
+    del ghi_data
+    del dni_data
+    del ws_data
+    # Export the result on the database
+    region_data.to_sql("nrel_"+region,psql_engine)
     del region_data
-cur.close()
-conn.close()
+#
 end_time = str(current_time("s"))
 
 # Log:
