@@ -121,22 +121,22 @@ psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/
 #
 for region in eba_regions.keys():
     # Commit data from all the stations in the region to memory
-    ghi_data = []
-    dni_data = []
-    ws_data = []
+    ghi_data = {}
+    dni_data = {}
+    ws_data = {}
+    region_data = {}
     for st_id in stations(region):
         station_data = nrel_data(st_id)
-        ghi_data.append(station_data['ghi_'+st_id])
-        dni_data.append(station_data['dni_'+st_id])
-        ws_data.append(station_data['ws_'+st_id])
+        ghi_data[st_id] = station_data['ghi_'+st_id]
+        dni_data[st_id] = station_data['dni_'+st_id]
+        ws_data[st_id] = station_data['ws_'+st_id]
         del station_data
     # Average GHI, DNI and WS over the stations
-    ghi_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ghi_data).mean(axis=1)
-    dni_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), dni_data).mean(axis=1)
-    ws_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data).mean(axis=1)
-    region_data = [ghi_data, dni_data, ws_data]
+    region_data["ghi"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ghi_data.values()).mean(axis=1)
+    region_data["dni"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), dni_data.values()).mean(axis=1)
+    region_data["ws"] = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data.values()).mean(axis=1)
     # Merge into a single dataset
-    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data)
+    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
     del ghi_data
     del dni_data
     del ws_data
