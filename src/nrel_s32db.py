@@ -135,7 +135,7 @@ for region in eba_regions.keys():
     dni_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), dni_data).mean(axis=1)
     ws_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), ws_data).mean(axis=1)
     # Merge into a single dataset
-    region_data = reduce(lambda left,right: pandas.merge(left,right,on['timestamp']), [ghi_data, dni_data, ws_data])
+    region_data = reduce(lambda left,right: pandas.merge(left,right,on=['timestamp']), [ghi_data, dni_data, ws_data])
     del ghi_data
     del dni_data
     del ws_data
