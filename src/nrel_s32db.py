@@ -121,7 +121,6 @@ psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/
 #
 for region in eba_regions.keys():
     # Commit data from all the stations in the region to memory
-    region = "CAR"
     ghi_data = {}
     dni_data = {}
     ws_data = {}
