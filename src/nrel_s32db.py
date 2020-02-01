@@ -119,33 +119,34 @@ def nrel_data(file_id):
 start_time = str(current_time("s"))
 psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/main')
 #
-for region in eba_regions.keys():
+#for region in eba_regions.keys():
     # Commit data from all the stations in the region to memory
-    ghi_data = {}
-    dni_data = {}
-    ws_data = {}
-    region_data = {}
-    for st_id in stations(region):
-        station_data = nrel_data(st_id)
-        ghi_data[st_id] = station_data['ghi_'+st_id]
-        dni_data[st_id] = station_data['dni_'+st_id]
-        ws_data[st_id] = station_data['ws_'+st_id]
-        del station_data
+region = "CAR"
+ghi_data = {}
+dni_data = {}
+ws_data = {}
+region_data = {}
+for st_id in stations(region):
+    station_data = nrel_data(st_id)
+    ghi_data[st_id] = station_data['ghi_'+st_id]
+    dni_data[st_id] = station_data['dni_'+st_id]
+    ws_data[st_id] = station_data['ws_'+st_id]
+    del station_data
     # Average GHI, DNI and WS over the stations
-    region_data["ghi"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                 ghi_data.values()).mean(axis=1)).set_axis(['ghi'],axis='columns',inplace=False)
-    region_data["dni"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                 dni_data.values()).mean(axis=1)).set_axis(['dni'],axis='columns',inplace=False)
-    region_data["ws"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
-                                                ws_data.values()).mean(axis=1)).set_axis(['wind speed'],axis='columns',inplace=False)
-    del ghi_data
-    del dni_data
-    del ws_data
+region_data["ghi"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
+                                             ghi_data.values()).mean(axis=1)).set_axis(['ghi'],axis='columns',inplace=False)
+region_data["dni"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
+                                             dni_data.values()).mean(axis=1)).set_axis(['dni'],axis='columns',inplace=False)
+region_data["ws"] = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']),\
+                                            ws_data.values()).mean(axis=1)).set_axis(['wind speed'],axis='columns',inplace=False)
+del ghi_data
+del dni_data
+del ws_data
     # Merge into a single dataset
-    region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
+region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
     # Export the result on the database
-    region_data.to_sql("nrel_"+region,psql_engine)
-    del region_data
+region_data.to_sql("nrel_"+region,psql_engine)
+del region_data
 #
 end_time = str(current_time("s"))
 
