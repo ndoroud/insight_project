@@ -24,9 +24,6 @@ from functools import reduce
 # Call environment variables
 project_dir = os.getenv("project_dir")
 #
-#nrel_key = os.getenv("nrel_key")
-#eia_key = os.getenv("eia_key")
-#census_key = os.getenv("census_key")
 #
 psql_h = os.getenv("psql_h")
 psql_u = os.getenv("psql_u")

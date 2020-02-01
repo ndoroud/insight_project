@@ -143,7 +143,7 @@ del ghi_data
 del dni_data
 del ws_data
     # Merge into a single dataset
-region_data = reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())
+region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values()))
     # Export the result on the database
 region_data.to_sql("nrel_"+region,psql_engine)
 del region_data
