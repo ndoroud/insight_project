@@ -142,7 +142,7 @@ for region in eba_regions.keys():
     del dni_data
     del ws_data
     # Merge into a single dataset
-    region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values()))
+    region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())).round(2)
     # Export the result on the database
     region_data.to_sql("nrel_"+region.lower(),psql_engine)
     del region_data
