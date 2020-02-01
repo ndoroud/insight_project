@@ -145,8 +145,8 @@ for region in eba_regions.keys():
     # Merge into a single dataset
     region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values()))
     # Export the result on the database
-    del region_data
     region_data.to_sql("nrel_"+region.lower(),psql_engine)
+    del region_data
 #
 end_time = str(current_time("s"))
 
