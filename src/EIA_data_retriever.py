@@ -66,7 +66,7 @@ def EIA_call(region,ser):
 #
 #
 def EIA_to_df(region,ser):
-    data = pandas.DataFrame(EIA_call(region,ser).json()['series'][0]['data']).set_axis(['timestamp', region+"_"+ser], axis='columns', inplace=False)
+    data = pandas.DataFrame(EIA_call(region,ser).json()['series'][0]['data']).set_axis(['timestamp', ser], axis='columns', inplace=False)
     data['timestamp'] = pandas.to_datetime(data['timestamp'],infer_datetime_format=True)
     return data
 #
@@ -101,7 +101,7 @@ with open(project_dir+"/logs/eia_logs.csv","a") as log_file:
 #
 #
 """
-# Alternatively we store different series in separate files on S3
+# Alternatively we can store different series in separate files on S3
 #
 #
 for region in eba_regions:
