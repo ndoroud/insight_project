@@ -78,30 +78,16 @@ nrel_keys = {"date": 'Date (MM/DD/YYYY)',
 #
 # Define functions to import and reduce the nrel data for each eba_region
 #
-# stations(r) outputs the list of file_ids for the stations situated in the
-# eba region r
+# stations(reg) outputs the list of file_ids and timezone pairs for the stations 
+# situated in the eba region reg
+# Assumptions: timezones range from UTC-5 to UTC-9 (Excludes Hawaii UTC-10)
 #
 def stations(region):
-    files = []
+    id_tz_pairs = {}
     for state in eba_regions[region]:
         for entry in nrel_headers[state]:
-            files.append(entry[0])
-    return files
-#
-#
-# to_datetime24 take a timestamp in the MM/DD/YYYYHH:MM (24:00) format, sets
-# the year to 2010 and converts timestamp(y=2010) to pandas datetime
-#
-def to_datetime24(timestamp,year='2010'):
-    if timestamp[10:12] != '24':
-        timestamp = timestamp[0:6] + year + timestamp[10:]
-        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M')
-    elif timestamp[0:5] != '12/31':
-        timestamp = timestamp[0:6] + year +'00' + timestamp[12:]
-        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + timedelta(days=1)
-    else:
-        timestamp = timestamp[0:6] + year +'00' + timestamp[12:]
-        return pandas.to_datetime(timestamp, format='%m/%d/%Y%H:%M') + timedelta(days=-364)
+            id_tz_pairs[entry[0]] = entry[3][0:2]
+    return id_tz_pairs
 #
 #
 def from_s3(file_id):
@@ -109,11 +95,23 @@ def from_s3(file_id):
             key="nrel/"+file_id+"TYA.CSV").get()['Body'].read().decode("utf-8").split("\r\n")[1:])))
 #
 #
-def nrel_data(file_id):
+def nrel_data(region,file_id):
     data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time', 'ghi_'+file_id, \
                                                                 'dni_'+file_id, 'ws_'+file_id], axis='columns', inplace=False)
-    data['timestamp'] = (data['timestamp']+data['time']).apply(to_datetime24)
+    data['timestamp'] = (data['timestamp'] + ' ' + data['time'] + stations(region)[file_id]).apply(to_datetime24)
     return data.drop('time',axis=1).set_index('timestamp')
+#
+#
+# to_datetime24 takes a timestamp in the MM/DD/YYYY HH:MM-tz (24:00) format, 
+# converts timestamp to pandas datetime and sets the year to year=2010
+#
+def to_datetime24(timestamp,year='2010'):
+    if timestamp[11:13] != '24':
+        timestamp = timestamp[0:6] + year + timestamp[10:]
+        return pandas.to_datetime(timestamp).tz_convert(tz=None).replace(year=2010)
+    else:
+        timestamp = timestamp[0:6] + year + ' 00' + timestamp[13:]
+        return (pandas.to_datetime(timestamp).tz_convert(tz=None) + timedelta(days=1)).replace(year=2010)
 #
 #
 start_time = str(current_time("s"))
@@ -124,9 +122,11 @@ for region in eba_regions.keys():
     ghi_data = {}
     dni_data = {}
     ws_data = {}
+    st_tz = {}
     region_data = {}
-    for st_id in stations(region):
+    for st_id in stations(region).keys():
         station_data = nrel_data(st_id)
+        st_tz = stations(region)[st_id]
         ghi_data[st_id] = station_data['ghi_'+st_id]
         dni_data[st_id] = station_data['dni_'+st_id]
         ws_data[st_id] = station_data['ws_'+st_id]

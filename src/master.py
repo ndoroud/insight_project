@@ -85,7 +85,7 @@ def cache(region):
 #
 #
 #temp_region = input()
-temp_region = "CAL"
+temp_region = "NE"
 eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
 # eia_data = eia_data[eia_data['timestamp'] > latest_entry(region)]
 eia_data = eia_data[eia_data['timestamp'] > "1900-01-01 00:00:00"]
@@ -99,6 +99,8 @@ index_range = len(eia_data)
 
 
 """
+cur.execute("create table data (timestamp timestamp not null, region varchar(50) not null, demand int,\
+    net-generation int, net-generation-solar int, ghi int, dni int, windspeed int)
 conn = psycopg2.connect('dbname=main '+psql_settings)
 cur = conn.cursor()
 #
