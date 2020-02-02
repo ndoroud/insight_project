@@ -125,7 +125,7 @@ for region in eba_regions.keys():
     st_tz = {}
     region_data = {}
     for st_id in stations(region).keys():
-        station_data = nrel_data(st_id)
+        station_data = nrel_data(region,st_id)
         st_tz = stations(region)[st_id]
         ghi_data[st_id] = station_data['ghi_'+st_id]
         dni_data[st_id] = station_data['dni_'+st_id]
