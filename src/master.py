@@ -105,7 +105,7 @@ cur = conn.cursor()
 #
 #
 cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
-    net_generation real, net_generation_solar real, ghi real, dni real, windspeed real, primary key (region, time_stamp))
+            net_generation real, net_generation_solar real, ghi real, dni real, windspeed real, primary key (region, time_stamp)")
 for temp_region in eba_regions:
     eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
     eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
