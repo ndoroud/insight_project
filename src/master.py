@@ -134,7 +134,7 @@ if last_log == '':
         for yr in data.keys():
             for i in range(len(data[yr])):
                 cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated)\
-                            VALUES ("+insert_values(temp_region,data[yr].iloc[i])+","+update_time+")")
+                            VALUES ("+insert_values(temp_region,data[yr].iloc[i])+",'{}'".format(update_time)+")")
             conn.commit()
     #
     #
