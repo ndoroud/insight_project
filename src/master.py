@@ -127,7 +127,7 @@ for temp_region in eba_regions:
     for yr in data.keys():
         for i in range(len(data[yr])):
             cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed)\
-                        VALUES "+insert_values(temp_region,data[yt].iloc[i]))
+                        VALUES "+insert_values(temp_region,data[yr].iloc[i]))
         conn.commit()
 #
 #
