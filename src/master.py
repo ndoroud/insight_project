@@ -100,6 +100,7 @@ def cache(region):
 # the update section 
 #
 #
+start_time = str(current_time("s"))
 conn = psycopg2.connect('dbname=main '+psql_settings)
 cur = conn.cursor()
 #
@@ -133,6 +134,11 @@ for temp_region in eba_regions:
 #
 cur.close()
 conn.close()
+end_time = str(current_time("s"))
+
+# Log:
+with open(project_dir+"/logs/log.csv","a") as log_file:
+    log_file.write(start_time+", "+end_time+"\n")
 
 
 
