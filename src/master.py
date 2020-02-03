@@ -68,9 +68,9 @@ def nerl_timestamp(tstamp):
 #
 #
 def insert_values(region,df_row):
-    values = region
+    values = "'{}'".format(region)
     for key in df_row.keys():
-        values = values + ',' + '{}'.format(df_row[key])
+        values = values + ',' + "'{}'".format(df_row[key])
     return '(' + values + ')'
 
 #
