@@ -148,42 +148,41 @@ else:
     start_time = str(current_time("s"))
     update_time = str(current_time("H"))
     #
-    temp_region = "NE"
     conn = psycopg2.connect('dbname=main '+psql_settings)
     cur = conn.cursor()
     #
-    main_entries = fetch_main(temp_region)
-    window_top = main_entries['time_stamp'].iloc[0]
-    window_bottom = main_entries['time_stamp'].iloc[-1]
-    #
-    recent_entries = fetch_recent(temp_region,window_bottom)
-    most_recent = recent_entries['timestamp'].iloc[0]
-    #
-    if most_recent == window_top:
-        pass
-    else:
-        new_entries = recent_entries[recent_entries['timestamp']>window_top]
+    for temp_region in eba_regions:
+        main_entries = fetch_main(temp_region)
+        window_top = main_entries['time_stamp'].iloc[0]
+        window_bottom = main_entries['time_stamp'].iloc[-1]
         #
-        # Check recent_entries against main_entries for updates
+        recent_entries = fetch_recent(temp_region,window_bottom)
+        most_recent = recent_entries['timestamp'].iloc[0]
         #
-        pass
-        while window_bottom <= window_top:
-            if recent_eq_main(window_bottom):
-                pass
-            else:
-                update_row(temp_region,window_bottom)
-            window_bottom = window_bottom + timedelta(hours=1)
-        conn.commit()
-        insert_into_db(new_entries,temp_region,window_top['timestamp'].year)
-        conn.commit()
+        if most_recent == window_top:
+            pass
+        else:
+            new_entries = recent_entries[recent_entries['timestamp']>window_top]
+            #
+            # Check recent_entries against main_entries for updates
+            #
+            pass
+            while window_bottom <= window_top:
+                if recent_eq_main(window_bottom):
+                    pass
+                else:
+                    update_row(temp_region,window_bottom)
+                window_bottom = window_bottom + timedelta(hours=1)
+            insert_into_db(new_entries,temp_region,window_top['timestamp'].year)
+            conn.commit()
     #
     #
     cur.close()
     conn.close()
     end_time = str(current_time("s"))
     # Log:
-    #with open(project_dir+"/logs/log.csv","a") as log_file:
-    #    log_file.write(start_time+", "+end_time+"\n")
+    with open(project_dir+"/logs/log.csv","a") as log_file:
+        log_file.write(start_time+", "+end_time+"\n")
 
 
 """
