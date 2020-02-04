@@ -125,7 +125,7 @@ def recent_eq_main(ts):
 def update_row(region,ts):
     re = recent_entries[recent_entries['timestamp'] == ts].iloc[0]
     cur.execute("update data set (demand,net_generation,net_generation_solar,updated)=('{}','{}','{}','{}') where region='{}' \
-                            and time_stamp='{}'".format(re['demant'],re['net-generation'],re['net-generation-solar'],update_time,region,ts))
+                            and time_stamp='{}'".format(re['demand'],re['net-generation'],re['net-generation-solar'],update_time,region,ts))
     cur.execute("INSERT INTO data_history (region,time_stamp,demand,net_generation,net_generation_solar,updated) VALUES \
                 ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demant'],re['net-generation'],re['net-generation-solar'],update_time))
     return None
