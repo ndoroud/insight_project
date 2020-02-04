@@ -3,12 +3,8 @@
 """
 January 2020
 @author: nima
-
-Notes:
-    -leap years (2016, 2020)
-    -
 """
-###############################################################################
+#############################################################################################################################################
 #
 #
 import os
@@ -50,7 +46,7 @@ siddict = {"demand":"D","net-generation":"NG","net-generation-solar":"NG.SUN"}
 #
 #
 #
-###############################################################################
+#############################################################################################################################################
 #
 #
 def nrel(region):
@@ -72,28 +68,6 @@ def insert_values(region,df_row):
     for key in df_row.keys():
         values = values + ',' + "'{}'".format(df_row[key])
     return values
-
-#
-#
-"""
-def latest_entry(region,sid):
-    cur.execute("select timestamp from data order by timestamp desc limit 72")
-    last_valid_entry = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', region, 'ghi', 'dni', 'value'], axis='columns', inplace=False)
-    last_entry['timestamp'] = pandas.to_datetime(last_entry['timestamp'],infer_datetime_format=True)
-    return last_entry#.set_index('timestamp')
-"""
-#
-#
-"""
-def cache(region):
-    cur.execute("select * from cache_{} order by timestamp desc limit 72".format(region))
-    cache = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'value','estimate'], axis='columns', inplace=False)
-    cache['timestamp'] = pandas.to_datetime(cache['timestamp'],infer_datetime_format=True)
-    return cache#.set_index('timestamp')
-"""
-#
-#
-###############################################################################
 #
 #
 def merge_data(eia_data,temp_region,yr):
@@ -112,19 +86,12 @@ def merge_data(eia_data,temp_region,yr):
 def insert_into_db(eia_data,temp_region,yr):
     temp_data = merge_data(eia_data,temp_region,yr)
     for i in range(len(temp_data)):
-        cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated) VALUES ("+insert_values(temp_region,temp_data.iloc[i])+",'{}'".format(update_time)+")")
+        cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated) \
+                    VALUES ("+insert_values(temp_region,temp_data.iloc[i])+",'{}')".format(update_time))
     return None
 #
 #
-# Initial run, to do: check if the data and cache tables exist, if yes skip to 
-# the update section ... use log instead
-#
-start_time = str(current_time("s"))
-update_time = str(current_time("H"))
-with open(project_dir+"/logs/log.csv","r") as log_file:
-    last_log = log_file.read().strip()
-if last_log == '':
-    #
+def init_db():
     conn = psycopg2.connect('dbname=main '+psql_settings)
     cur = conn.cursor()
     #
@@ -146,43 +113,9 @@ if last_log == '':
     #
     cur.close()
     conn.close()
-    end_time = str(current_time("s"))
-    # Log:
-    with open(project_dir+"/logs/log.csv","a") as log_file:
-        log_file.write(start_time+", "+end_time+"\n")
-else:
-    pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return None
+#
+#
+#############################################################################################################################################
+#############################################################################################################################################
+#############################################################################################################################################
