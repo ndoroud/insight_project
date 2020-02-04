@@ -101,7 +101,7 @@ def merge_data(eia_data,temp_region,yr):
     if pandas.to_datetime(str(yr)).is_leap_year:
         feb29 = pandas.DataFrame(nrel_data['timestamp'][7344:7368])
         feb29['timestamp'] = feb29['timestamp'].apply(lambda ts: ts.replace(year=yr).replace(day=29))
-        feb29 = feb29.merge(nrel_data,left_index=True,right_index=True).drop(\'timestamp_y',axis=1).set_axis(['timestamp','ghi', 'dni','ws'], axis='columns', inplace=False)
+        feb29 = feb29.merge(nrel_data,left_index=True,right_index=True).drop('timestamp_y',axis=1).set_axis(['timestamp','ghi', 'dni','ws'], axis='columns', inplace=False)
         nrel_data = pandas.concat([feb29,nrel_data],ignore_index=True)
         nrel_data['timestamp'] = nrel_data['timestamp'].apply(lambda ts: ts.replace(year=yr))
     else:
@@ -109,10 +109,10 @@ def merge_data(eia_data,temp_region,yr):
     return eia_data[eia_data['timestamp'].apply(lambda ts: ts.year == yr)].merge(nrel_data,on='timestamp')
 #
 #
-def insert_into_db(eia_data,remp_region,yr):
+def insert_into_db(eia_data,temp_region,yr):
     temp_data = merge_data(eia_data,temp_region,yr)
     for i in range(len(temp_data)):
-        cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated) VALUES ("+insert_values(temp_region,data[yr].iloc[i])+",'{}'".format(update_time)+")")
+        cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated) VALUES ("+insert_values(temp_region,temp_data.iloc[i])+",'{}'".format(update_time)+")")
     return None
 #
 #
@@ -142,9 +142,7 @@ if last_log == '':
         #
         for yr in year_range:
             temp_data = merge_data(eia_data,temp_region,yr)
-            for i in range(len(temp_data)):
-                cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, \
-                            updated) VALUES ("+insert_values(temp_region,data[yr].iloc[i])+",'{}'".format(update_time)+")")
+            insert_into_db(eia_data,temp_region,yr)
             conn.commit()
     #
     #
