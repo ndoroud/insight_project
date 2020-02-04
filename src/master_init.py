@@ -137,11 +137,9 @@ if last_log == '':
         eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
         eia_data.drop(eia_data.tail(2).index,inplace=True)
         eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
-        index_range = range(len(eia_data))
         year_range = range(eia_data['timestamp'].iloc[-1].year, eia_data['timestamp'].iloc[0].year+1)
         #
         for yr in year_range:
-            temp_data = merge_data(eia_data,temp_region,yr)
             insert_into_db(eia_data,temp_region,yr)
             conn.commit()
     #
