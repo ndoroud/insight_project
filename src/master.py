@@ -13,13 +13,13 @@ Notes:
 #
 import os
 import boto3
-import io
-import json
+#import io
+#import json
 import pandas
-import requests
+#import requests
 import psycopg2
 from datetime import datetime
-from functools import reduce
+#from functools import reduce
 #
 # Call environment variables
 project_dir = os.getenv("project_dir")
@@ -102,54 +102,15 @@ def cache(region):
 with open(project_dir+"/logs/log.csv","r") as log_file:
     last_log = log_file.read().strip()
 if last_log == '':
-    #
-    start_time = str(current_time("s"))
-    update_time = str(current_time())
-    conn = psycopg2.connect('dbname=main '+psql_settings)
-    cur = conn.cursor()
-    #
-    #
-    cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
-                net_generation real, net_generation_solar real, ghi real, dni real, windspeed real,\
-                    updated timestamp not null, primary key (region, time_stamp, updated))")
-    for temp_region in eba_regions:
-        eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
-        eia_data.drop(eia_data.tail(2).index,inplace=True)
-        eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
-        index_range = range(len(eia_data))
-        year_range = range(eia_data['timestamp'].iloc[-1].year,eia_data['timestamp'].iloc[0].year)
-        #
-        data={}
-        for yr in year_range:
-            nrel_data = nrel(temp_region)
-            if pandas.to_datetime(str(yr)).is_leap_year:
-                feb29 = pandas.DataFrame(nrel_data['timestamp'][7344:7368])
-                feb29['timestamp'] = feb29['timestamp'].apply(lambda ts: ts.replace(year=yr).replace(day=29))
-                feb29 = feb29.merge(nrel_data,left_index=True,right_index=True).drop('timestamp_y',axis=1).set_axis(['timestamp','ghi', 'dni','ws'], axis='columns', inplace=False)
-                nrel_data = pandas.concat([feb29,nrel_data],ignore_index=True)
-                nrel_data['timestamp'] = nrel_data['timestamp'].apply(lambda ts: ts.replace(year=yr))
-            else:
-                nrel_data['timestamp'] = nrel_data['timestamp'].apply(lambda ts: ts.replace(year=yr))
-            data[yr] = eia_data[eia_data['timestamp'].apply(lambda ts: ts.year == yr)].merge(nrel_data,on='timestamp')
-        for yr in data.keys():
-            for i in range(len(data[yr])):
-                cur.execute("INSERT INTO data (region, time_stamp, demand, net_generation, net_generation_solar, ghi, dni, windspeed, updated)\
-                            VALUES ("+insert_values(temp_region,data[yr].iloc[i])+",'{}'".format(update_time)+")")
-            conn.commit()
-    #
-    #
-    cur.close()
-    conn.close()
-    end_time = str(current_time("s"))
-    # Log:
-    with open(project_dir+"/logs/log.csv","a") as log_file:
-        log_file.write(start_time+", "+end_time+"\n")
+    # Call master_init.py
+    pass
 else:
     #
     start_time = str(current_time("s"))
     conn = psycopg2.connect('dbname=main '+psql_settings)
     cur = conn.cursor()
     #
+    cur.execute()
     #
     cur.close()
     conn.close()

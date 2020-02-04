@@ -131,7 +131,7 @@ if last_log == '':
     #
     cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
                 net_generation real, net_generation_solar real, ghi real, dni real, windspeed real,\
-                    updated timestamp not null, primary key (region, time_stamp, updated))")
+                    updated timestamp not null, primary key (region, time_stamp))")
     conn.commit()
     for temp_region in eba_regions:
         eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
