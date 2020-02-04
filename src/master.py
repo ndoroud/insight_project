@@ -127,7 +127,7 @@ def update_row(region,ts):
     cur.execute("update data set (demand,net_generation,net_generation_solar,updated)=('{}','{}','{}','{}') where region='{}' \
                             and time_stamp='{}'".format(re['demand'],re['net-generation'],re['net-generation-solar'],update_time,region,ts))
     cur.execute("INSERT INTO data_history (region,time_stamp,demand,net_generation,net_generation_solar,updated) VALUES \
-                ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demant'],re['net-generation'],re['net-generation-solar'],update_time))
+                ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net-generation'],re['net-generation-solar'],update_time))
     return None
 #
 #
