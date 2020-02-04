@@ -173,7 +173,7 @@ else:
                 else:
                     update_row(temp_region,window_bottom)
                 window_bottom = window_bottom + timedelta(hours=1)
-            insert_into_db(new_entries,temp_region,window_top['timestamp'].year)
+            insert_into_db(new_entries,temp_region,window_top.year)
             conn.commit()
     #
     #
