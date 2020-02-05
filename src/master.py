@@ -142,6 +142,34 @@ def change_history(region,ts):
                 ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net-generation'],re['net-generation-solar'],update_time))
 #
 #
+def init_db():
+    conn = psycopg2.connect('dbname=main '+psql_settings)
+    cur = conn.cursor()
+    #
+    #
+    cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
+                net_generation real, net_generation_solar real, ghi real, dni real, windspeed real,\
+                    updated timestamp not null, primary key (region, time_stamp))")
+    cur.execute("create table data_history (region varchar(8) not null, time_stamp timestamp not null, demand real,\
+                net_generation real, net_generation_solar real, updated timestamp not null, \
+                    primary key (region, time_stamp, updated), foreign key (region, time_stamp) references data(region,time_stamp))")
+    conn.commit()
+    for temp_region in eba_regions:
+        eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
+        eia_data.drop(eia_data.tail(2).index,inplace=True)
+        eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
+        year_range = range(eia_data['timestamp'].iloc[-1].year, eia_data['timestamp'].iloc[0].year+1)
+        #
+        for yr in year_range:
+            insert_into_db(eia_data,temp_region,yr)
+            conn.commit()
+    #
+    #
+    cur.close()
+    conn.close()
+    return None
+#
+#
 ###############################################################################
 #
 #
