@@ -179,9 +179,7 @@ def init_db():
 with open(project_dir+"/logs/log.csv","r") as log_file:
     last_log = log_file.read().strip()
 if last_log == '':
-    # Call master_init.py
-    import master_init
-    master_init.init_db()
+    init_db()
 else:
     #
     start_time = str(current_time("s"))
