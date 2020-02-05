@@ -139,7 +139,7 @@ def change_history(region,ts):
         else:
             re[key] = r_entry[key].iloc[0]
     cur.execute("INSERT INTO data_history (region,time_stamp,demand,net_generation,net_generation_solar,updated) VALUES \
-                ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net-generation'],re['net-generation-solar'],update_time))
+                ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net_generation'],re['net_generation_solar'],update_time))
 #
 #
 def init_db():
