@@ -115,7 +115,7 @@ def recent_eq_main(ts):
     m_entry = main_entries[main_entries['time_stamp'] == ts].drop(['time_stamp','updated'],axis=1)
     for key in r_entry.keys():
         eq = True
-        if not r_entry['net_generation'].isnull().iloc[0]:
+        if not r_entry[key].isnull().iloc[0]:
             eq = eq and r_entry[key].iloc[0] == m_entry[key].iloc[0]
         else:
             pass
@@ -126,9 +126,20 @@ def update_row(region,ts):
     re = recent_entries[recent_entries['timestamp'] == ts].iloc[0]
     cur.execute("update data set (demand,net_generation,net_generation_solar,updated)=('{}','{}','{}','{}') where region='{}' \
                             and time_stamp='{}'".format(re['demand'],re['net-generation'],re['net-generation-solar'],update_time,region,ts))
+    return None
+#
+#
+def change_history(region,ts):
+    r_entry = recent_entries[recent_entries['timestamp'] == ts].drop('timestamp',axis=1).set_axis(['demand','net_generation', 'net_generation_solar'], axis='columns', inplace=False)
+    m_entry = main_entries[main_entries['time_stamp'] == ts].drop(['time_stamp','updated'],axis=1)
+    re = {}
+    for key in r_entry.keys():
+        if not r_entry[key].isnull().iloc[0] and not m_entry[key].isnull().iloc[0]:
+            re[key] = r_entry[key].iloc[0] - m_entry[key].iloc[0]
+        else:
+            re[key] = r_entry[key].iloc[0]
     cur.execute("INSERT INTO data_history (region,time_stamp,demand,net_generation,net_generation_solar,updated) VALUES \
                 ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net-generation'],re['net-generation-solar'],update_time))
-    return None
 #
 #
 ###############################################################################
@@ -172,6 +183,7 @@ else:
                     pass
                 else:
                     update_row(temp_region,window_bottom)
+                    change_history(temp_region,window_bottom)
                 window_bottom = window_bottom + timedelta(hours=1)
             insert_into_db(new_entries,temp_region,window_top.year)
             conn.commit()
