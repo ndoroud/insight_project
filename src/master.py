@@ -206,14 +206,14 @@ else:
                 window_bottom = window_bottom + timedelta(hours=1)
             insert_into_db(new_entries,temp_region,window_top.year)
             conn.commit()
-    #
-    #
-    end_time = str(current_time("s"))
-    # Log:
-with open(project_dir+"/logs/log.csv","a") as log_file:
-    log_file.write(start_time+", "+end_time+"\n")
 cur.close()
 conn.close()
+#
+#
+end_time = str(current_time("s"))
+# Log:
+with open(project_dir+"/logs/log.csv","a") as log_file:
+    log_file.write(start_time+", "+end_time+"\n")
 
 """
 cur.execute("create table data (timestamp timestamp not null, region varchar(50) not null, demand int,\
