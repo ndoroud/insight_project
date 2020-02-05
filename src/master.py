@@ -143,10 +143,6 @@ def change_history(region,ts):
 #
 #
 def init_db():
-    conn = psycopg2.connect('dbname=main '+psql_settings)
-    cur = conn.cursor()
-    #
-    #
     cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
                 net_generation real, net_generation_solar real, ghi real, dni real, windspeed real,\
                     updated timestamp not null, primary key (region, time_stamp))")
@@ -163,10 +159,6 @@ def init_db():
         for yr in year_range:
             insert_into_db(eia_data,temp_region,yr)
             conn.commit()
-    #
-    #
-    cur.close()
-    conn.close()
     return None
 #
 #
@@ -175,6 +167,9 @@ def init_db():
 #
 # Initial run, to do: check if the data and cache tables exist, if yes skip to 
 # the update section ... use log instead
+#
+conn = psycopg2.connect('dbname=main '+psql_settings)
+cur = conn.cursor()
 #
 with open(project_dir+"/logs/log.csv","r") as log_file:
     last_log = log_file.read().strip()
@@ -185,8 +180,6 @@ else:
     start_time = str(current_time("s"))
     update_time = str(current_time("H"))
     #
-    conn = psycopg2.connect('dbname=main '+psql_settings)
-    cur = conn.cursor()
     #
     for temp_region in eba_regions:
         main_entries = fetch_main(temp_region)
@@ -215,13 +208,12 @@ else:
             conn.commit()
     #
     #
-    cur.close()
-    conn.close()
     end_time = str(current_time("s"))
     # Log:
     with open(project_dir+"/logs/log.csv","a") as log_file:
         log_file.write(start_time+", "+end_time+"\n")
-
+cur.close()
+conn.close()
 
 """
 cur.execute("create table data (timestamp timestamp not null, region varchar(50) not null, demand int,\
