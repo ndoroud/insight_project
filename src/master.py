@@ -168,6 +168,9 @@ def init_db():
 # Initial run, to do: check if the data and cache tables exist, if yes skip to 
 # the update section ... use log instead
 #
+start_time = str(current_time("s"))
+update_time = str(current_time("H"))
+#
 conn = psycopg2.connect('dbname=main '+psql_settings)
 cur = conn.cursor()
 #
@@ -176,9 +179,6 @@ with open(project_dir+"/logs/log.csv","r") as log_file:
 if last_log == '':
     init_db()
 else:
-    #
-    start_time = str(current_time("s"))
-    update_time = str(current_time("H"))
     #
     #
     for temp_region in eba_regions:
