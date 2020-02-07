@@ -24,6 +24,7 @@ nrel_key = os.getenv("nrel_key")
 eia_key = os.getenv("eia_key")
 census_key = os.getenv("census_key")
 #
+s3bucket = os.getenv("s3_bucket")
 psql_h = os.getenv("psql_h")
 psql_u = os.getenv("psql_u")
 psql_p = os.getenv("psql_p")
