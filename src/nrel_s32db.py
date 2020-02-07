@@ -10,12 +10,11 @@ January 2020
 import os
 import boto3
 import pandas
-# import psycopg2 # sqlalchemy is a good alternative
+import psycopg2 # sqlalchemy is a good alternative
 from io import StringIO
 from datetime import datetime
 from datetime import timedelta
 from functools import reduce
-from sqlalchemy import create_engine
 #
 # Call environment variables
 project_dir = os.getenv("project_dir")
@@ -115,7 +114,11 @@ def to_datetime24(timestamp,year='2010'):
 #
 #
 start_time = str(current_time("s"))
-psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/main')
+#
+#
+conn = psycopg2.connect('dbname=main '+psql_settings)
+cur = conn.cursor()
+#
 #
 for region in eba_regions.keys():
     # Commit data from all the stations in the region to memory
@@ -143,16 +146,22 @@ for region in eba_regions.keys():
     del ws_data
     # Merge into a single dataset
     region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())).round(2)
+    region_data['region'] = region
     # Export the result on the database
-    region_data.to_sql("nrel_"+region.lower(),psql_engine)
+    region_data.to_sql("nrel",conn)
+    conn.commit()
     del region_data
 #
 end_time = str(current_time("s"))
-
+#
+cur.close()
+conn.close()
+#
+#
 # Log:
 with open(project_dir+"/logs/nrel_logs.csv","a") as log_file:
     log_file.write(start_time+", "+end_time+"\n")
-
+#
 #############################################################################################################################################
 #############################################################################################################################################
 #############################################################################################################################################

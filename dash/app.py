@@ -75,19 +75,28 @@ html.Label('Select year'),
 	],
 	value='2020'
     ),
- dash_table.DataTable(
-    id='table',
-    value='NE',
-    columns=[{"name": i, "id": i} for i in main.columns],
-    data=main.to_dict("rows")
-)]
+dcc.Input(id='my-id', value='initial value', type='text'),
+    html.Div(id='my-div')]#,
+#dash_table.DataTable(
+#    id='table',
+#    columns=[{"name": i, "id": i} for i in main.columns],
+#    data=main.to_dict("rows")
+#)]
 )
+
+@app.callback(
+    Output(component_id='my-div', component_property='children'),
+    [Input(component_id='my-id', component_property='value')]
+)
+def update_output_div(input_value):
+    return 'You\'ve entered "{}"'.format(input_value)
 
 #@app.callback(
 #    Output('table', 'table'),
 #    [Input('region_drop', 'value')])
 def update_table(region,ts_1,ts_2):
-    
+    return ptint('hello')
+
 if __name__ == '__main__':
     app.run_server(host='0.0.0.0', debug=True, port='8080')
 #
@@ -95,4 +104,4 @@ if __name__ == '__main__':
 cur.close()
 conn.close()
 #
-###################################################################################################
+###############################################################################
