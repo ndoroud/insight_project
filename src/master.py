@@ -27,6 +27,7 @@ from sqlalchemy import create_engine
 project_dir = os.getenv("project_dir")
 #
 #
+s3bucket = os.getenv("s3_bucket")
 psql_h = os.getenv("psql_h")
 psql_u = os.getenv("psql_u")
 psql_p = os.getenv("psql_p")
@@ -83,7 +84,7 @@ def fetch_main(region,n="72"):
 #
 #
 def fetch_recent(region,window):
-    eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
+    eia_data = pandas.read_csv(filepath_or_buffer=s3bucket+"/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
     eia_data.drop(eia_data.tail(2).index,inplace=True)
     eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
     return eia_data[eia_data['timestamp'] >= window]
@@ -151,7 +152,7 @@ def init_db():
                     primary key (region, time_stamp, updated), foreign key (region, time_stamp) references data(region,time_stamp))")
     conn.commit()
     for temp_region in eba_regions:
-        eia_data = pandas.read_csv(filepath_or_buffer="s3://nima-s3/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
+        eia_data = pandas.read_csv(filepath_or_buffer=s3bucket+"/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
         eia_data.drop(eia_data.tail(2).index,inplace=True)
         eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
         year_range = range(eia_data['timestamp'].iloc[-1].year, eia_data['timestamp'].iloc[0].year+1)

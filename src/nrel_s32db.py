@@ -23,6 +23,7 @@ project_dir = os.getenv("project_dir")
 #eia_key = os.getenv("eia_key")
 #census_key = os.getenv("census_key")
 #
+s3bucket = os.getenv("s3_bucket")
 psql_h = os.getenv("psql_h")
 psql_u = os.getenv("psql_u")
 psql_p = os.getenv("psql_p")
@@ -90,7 +91,7 @@ def stations(region):
 #
 #
 def from_s3(file_id):
-    return pandas.read_csv(StringIO("\n".join(s3.Object(bucket_name='nima-s3', \
+    return pandas.read_csv(StringIO("\n".join(s3.Object(bucket_name=s3bucket[5:], \
             key="nrel/"+file_id+"TYA.CSV").get()['Body'].read().decode("utf-8").split("\r\n")[1:])))
 #
 #

@@ -89,7 +89,7 @@ for region in eba_regions:
 #
     csv_buffer = io.StringIO()
     data.to_csv(csv_buffer)
-    s3.Object("nima-s3", "eia/EBA."+region+"-ALL.H.csv").put(Body=csv_buffer.getvalue())
+    s3.Object(s3bucket[5:], "eia/EBA."+region+"-ALL.H.csv").put(Body=csv_buffer.getvalue())
     del data
 end_time = str(current_time("s"))
 
@@ -109,6 +109,6 @@ for region in eba_regions:
         temp_data = EIA_to_df(region,ser)
         csv_buffer = io.StringIO()
         temp_data.to_csv(csv_buffer)
-        s3.Object("nima-s3", "eia/EBA."+region+"-ALL."+siddict[ser]+".H.csv").put(Body=csv_buffer.getvalue())
+        s3.Object(s3bucket[5:], "eia/EBA."+region+"-ALL."+siddict[ser]+".H.csv").put(Body=csv_buffer.getvalue())
         del temp_data
 """
