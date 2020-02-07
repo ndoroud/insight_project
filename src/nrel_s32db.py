@@ -120,7 +120,7 @@ def insert_values(region,df_row):
     return values
 #
 #
-def insert_into_db(nrel_data,temp_region):
+def insert_into_db(temp_data,temp_region):
     for i in range(len(nrel_data)):
         cur.execute("INSERT INTO nrel (region, time_stamp, ghi, dni, wind_speed) VALUES \
                     ({})".format(insert_values(temp_region,temp_data.iloc[i])))
