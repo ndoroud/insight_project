@@ -113,6 +113,20 @@ def to_datetime24(timestamp,year='2010'):
         return (pandas.to_datetime(timestamp).tz_convert(tz=None) + timedelta(days=1)).replace(year=2010)
 #
 #
+def insert_values(region,df_row):
+    values = "'{}'".format(region)
+    for key in df_row.keys():
+        values = values + ',' + "'{}'".format(df_row[key])
+    return values
+#
+#
+def insert_into_db(nrel_data,temp_region):
+    for i in range(len(nrel_data)):
+        cur.execute("INSERT INTO nrel (region, time_stamp, ghi, dni, wind_speed) VALUES \
+                    ({})".format(insert_values(temp_region,temp_data.iloc[i])))
+    return None
+#
+#
 start_time = str(current_time("s"))
 #
 #
@@ -146,9 +160,8 @@ for region in eba_regions.keys():
     del ws_data
     # Merge into a single dataset
     region_data = pandas.DataFrame(reduce(lambda  left,right: pandas.merge(left,right,on=['timestamp']), region_data.values())).round(2)
-    region_data['region'] = region
     # Export the result on the database
-    region_data.to_sql("nrel",conn)
+    insert_into_db(region_data,region)
     conn.commit()
     del region_data
 #
