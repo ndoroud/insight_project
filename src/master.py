@@ -57,8 +57,8 @@ siddict = {"demand":"D","net-generation":"NG","net-generation-solar":"NG.SUN"}
 #
 #
 def nrel(region):
-    cur.execute("select * from nrel_{} order by timestamp desc".format(region))
-    cache = pandas.DataFrame(cur.fetchall()).set_axis(['timestamp', 'ghi', 'dni', "ws"], axis='columns', inplace=False)
+    cur.execute("select * from nrel where region like '{}' order by time_stamp desc".format(region))
+    cache = pandas.DataFrame(cur.fetchall()).set_axis(['region','timestamp', 'ghi', 'dni', "ws"], axis='columns', inplace=False).drop('region',axis=1)
     cache['timestamp'] = pandas.to_datetime(cache['timestamp'],infer_datetime_format=True)
     return cache
 #
