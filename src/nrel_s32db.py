@@ -98,7 +98,7 @@ def nrel_data(region,file_id):
     data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time', 'ghi_'+file_id, \
                                                                 'dni_'+file_id, 'ws_'+file_id], axis='columns', inplace=False)
     data['timestamp'] = (data['timestamp'] + ' ' + data['time'] + stations(region)[file_id]).apply(to_datetime24)
-    return data.drop('time',axis=1).set_index('timestamp')
+    return data.drop('time',axis=1)
 #
 #
 # to_datetime24 takes a timestamp in the MM/DD/YYYY HH:MM-tz (24:00) format, 
