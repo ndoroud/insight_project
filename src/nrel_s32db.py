@@ -98,7 +98,7 @@ def nrel_data(region,file_id):
     data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time', 'ghi_'+file_id, \
                                                                 'dni_'+file_id, 'ws_'+file_id], axis='columns', inplace=False)
     data['timestamp'] = (data['timestamp'] + ' ' + data['time'] + stations(region)[file_id]).apply(to_datetime24)
-    return data.drop('time',axis=1)
+    return data.drop('time',axis=1).set_index('timestamp')
 #
 #
 # to_datetime24 takes a timestamp in the MM/DD/YYYY HH:MM-tz (24:00) format, 
@@ -113,8 +113,8 @@ def to_datetime24(timestamp,year='2010'):
         return (pandas.to_datetime(timestamp).tz_convert(tz=None) + timedelta(days=1)).replace(year=2010)
 #
 #
-def insert_values(region,df_row):
-    values = "'{}'".format(region)
+def insert_values(region,ts,df_row):
+    values = "'{}','{}'".format(region,ts)
     for key in df_row.keys():
         values = values + ',' + "'{}'".format(df_row[key])
     return values
@@ -123,7 +123,7 @@ def insert_values(region,df_row):
 def insert_into_db(temp_data,temp_region):
     for i in range(len(temp_data)):
         cur.execute("INSERT INTO nrel (region, time_stamp, ghi, dni, wind_speed) VALUES \
-                    ({})".format(insert_values(temp_region,temp_data.iloc[i])))
+                    ({})".format(insert_values(temp_region,temp_data.index[i],temp_data.iloc[i])))
     return None
 #
 #
