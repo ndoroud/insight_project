@@ -137,7 +137,7 @@ def recent_eq_main(ts):
     for key in r_entry.keys():
         eq = True
         if not r_entry[key].isnull().iloc[0]:
-            eq = eq and r_entry[key].iloc[0] == m_entry[key].iloc[0]
+            eq = eq and (r_entry[key].iloc[0] == m_entry[key].iloc[0])
         else:
             pass
     return eq
