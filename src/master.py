@@ -13,34 +13,34 @@ Notes:
 #
 import os
 import boto3
-#import io
-#import json
 import pandas
-#import requests
 import psycopg2
 from datetime import datetime
 from datetime import timedelta
-#from functools import reduce
-from sqlalchemy import create_engine
 #
-# Call environment variables
+# Import environment variables, project_dir is the local directory where the repository is cloned, the name of the s3bucket to use
+# and the PostgreSQL database information (host, credentials) which are combined and stored as psql_settings.
+#
 project_dir = os.getenv("project_dir")
-#
-#
 s3bucket = os.getenv("s3_bucket")
 psql_h = os.getenv("psql_h")
 psql_u = os.getenv("psql_u")
 psql_p = os.getenv("psql_p")
 psql_settings = "host={} user={} password={}".format(psql_h,psql_u,psql_p)
-psql_engine = create_engine('postgresql://'+psql_u+':'+psql_p+'@'+psql_h+':5432/main')
 #
+#
+# Define s3 for convenience access to s3 storage.
 #
 s3 = boto3.resource('s3')
 #
 #
+# Current time to include with the changes to the database as well as for logging.
+#
 def current_time(fr="T"):
     return pandas.to_datetime(datetime.now()).round(freq = fr)
 #
+#
+# The list of grid regions and the states they contain to be used in for loops.
 #
 eba_regions = []
 with open(project_dir+"/lists/eba_regions.csv","r") as ebaregions:
@@ -49,6 +49,8 @@ with open(project_dir+"/lists/eba_regions.csv","r") as ebaregions:
         eba_regions.append(reg[0])
 #
 #
+# Columns of the EIA data to include.
+#
 siddict = {"demand":"D","net-generation":"NG","net-generation-solar":"NG.SUN"}
 #
 #
@@ -56,6 +58,10 @@ siddict = {"demand":"D","net-generation":"NG","net-generation-solar":"NG.SUN"}
 #
 ###############################################################################
 #
+# Define all the functions needed for importing, merging and exporting the data.
+#
+#
+# Imports the processed NREL data for the specified region from the database. returns a dataframe.
 #
 def nrel(region):
     cur.execute("select * from nrel where region like '{}' order by time_stamp desc".format(region))
@@ -64,6 +70,8 @@ def nrel(region):
     return cache
 #
 #
+# When merging with the EIA data during a leap year, in lieu of feb 29 data, feb 28 data is used. Returns a timestamp.
+#
 def nerl_timestamp(tstamp):
     if tstamp[5:10] != "02-29":
         return "2010"+tstamp[4:]
@@ -71,17 +79,14 @@ def nerl_timestamp(tstamp):
         return "2010-02-28"+tstamp[10:]
 #
 #
-def insert_values(region,df_row):
-    values = "'{}'".format(region)
-    for key in df_row.keys():
-        values = values + ',' + "'{}'".format(df_row[key])
-    return values
-#
+# Imports the latest n rows (set to 72 by default) in the database. Returns a dataframe.
 #
 def fetch_main(region,n="72"):
     return pandas.read_sql("select * from data where region like '{}' order by time_stamp desc limit \
                            {}".format(region,n),conn).drop(['region','ghi','dni','windspeed'],axis=1)
 #
+#
+# Imports the recent EIA data going as for back as the 'window' timestamp. Retuns a dataframe.
 #
 def fetch_recent(region,window):
     eia_data = pandas.read_csv(filepath_or_buffer=s3bucket+"/eia/EBA."+temp_region+"-ALL.H.csv").drop("Unnamed: 0",axis=1)
@@ -89,6 +94,8 @@ def fetch_recent(region,window):
     eia_data['timestamp'] = eia_data['timestamp'].apply(lambda ts: pandas.Timestamp(ts))
     return eia_data[eia_data['timestamp'] >= window]
 #
+#
+# Merges the latest EIA data not currently in the database with the NREL data accounting for leap year. Returns a dataframe.
 #
 def merge_data(eia_data,temp_region,yr):
     nrel_data = nrel(temp_region)
@@ -101,7 +108,18 @@ def merge_data(eia_data,temp_region,yr):
     else:
         nrel_data['timestamp'] = nrel_data['timestamp'].apply(lambda ts: ts.replace(year=yr))
     return eia_data[eia_data['timestamp'].apply(lambda ts: ts.year == yr)].merge(nrel_data,on='timestamp')
+# 
 #
+# Formats the dataframe row to intest into the database table. Returns a string.
+#
+def insert_values(region,df_row):
+    values = "'{}'".format(region)
+    for key in df_row.keys():
+        values = values + ',' + "'{}'".format(df_row[key])
+    return values
+#
+#
+# Writes all new rows for the temp_region into the database, year by year. Returns None.
 #
 def insert_into_db(eia_data,temp_region,yr):
     temp_data = merge_data(eia_data,temp_region,yr)
@@ -110,6 +128,8 @@ def insert_into_db(eia_data,temp_region,yr):
                     updated) VALUES ("+insert_values(temp_region,temp_data.iloc[i])+",'{}'".format(update_time)+")")
     return None
 #
+#
+# Checks if the data of an existing row in the database matches the new data imported by fetch_recent. Returns bool.
 #
 def recent_eq_main(ts):
     r_entry = recent_entries[recent_entries['timestamp'] == ts].drop('timestamp',axis=1).set_axis(['demand','net_generation', 'net_generation_solar'], axis='columns', inplace=False)
@@ -123,12 +143,16 @@ def recent_eq_main(ts):
     return eq
 #
 #
+# Updates the row identified by the primary key pair (region, timestamp) with new values.
+#
 def update_row(region,ts):
     re = recent_entries[recent_entries['timestamp'] == ts].iloc[0]
     cur.execute("update data set (demand,net_generation,net_generation_solar,updated)=('{}','{}','{}','{}') where region='{}' \
                             and time_stamp='{}'".format(re['demand'],re['net-generation'],re['net-generation-solar'],update_time,region,ts))
     return None
 #
+#
+# Adds a row to the data_history table to log the changes made to the row identified by the primary key pair (region, timestamp).
 #
 def change_history(region,ts):
     r_entry = recent_entries[recent_entries['timestamp'] == ts].drop('timestamp',axis=1).set_axis(['demand','net_generation', 'net_generation_solar'], axis='columns', inplace=False)
@@ -142,6 +166,8 @@ def change_history(region,ts):
     cur.execute("INSERT INTO data_history (region,time_stamp,demand,net_generation,net_generation_solar,updated) VALUES \
                 ('{}','{}','{}','{}','{}','{}')".format(region,ts,re['demand'],re['net_generation'],re['net_generation_solar'],update_time))
 #
+#
+# Assumes this is the initial run and creates the tables and processes the entire datasets.
 #
 def init_db():
     cur.execute("create table data (region varchar(8) not null, time_stamp timestamp not null, demand real,\
@@ -166,8 +192,9 @@ def init_db():
 ###############################################################################
 #
 #
-# Initial run, to do: check if the data and cache tables exist, if yes skip to 
-# the update section ... use log instead
+# Initial run, if the log is empty runs init_db().
+# If log has entries, imports recent data and changes, adds new rows after merging the datasets and updates the database
+# with any changes whist adding a row to data_history to log the change.
 #
 start_time = str(current_time("s"))
 update_time = str(current_time("H"))
@@ -215,56 +242,7 @@ end_time = str(current_time("s"))
 # Log:
 with open(project_dir+"/logs/log.csv","a") as log_file:
     log_file.write(start_time+", "+end_time+"\n")
-
-"""
-cur.execute("create table data (timestamp timestamp not null, region varchar(50) not null, demand int,\
-    net-generation int, net-generation-solar int, ghi int, dni int, windspeed int)
-conn = psycopg2.connect('dbname=main '+psql_settings)
-cur = conn.cursor()
 #
-#
-#temp_region = input()
-temp_region = "CAL"
-#
-#
-x = nrel('car')
-#
-#
-cur.close()
-conn.close()
-"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#############################################################################################################################################
+#############################################################################################################################################
+#############################################################################################################################################
