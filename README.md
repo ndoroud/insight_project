@@ -43,4 +43,4 @@ The task of processing and merging the two datasets can be divided both spatiall
 
 ## Future directions
 
-Include live data from the weather stations for monitoring.
+A few things that are missing, mostly due to time contraints: include live data from the weather stations for monitoring, access and include data from smaller areas and the relevant census.
