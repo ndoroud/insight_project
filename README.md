@@ -1,4 +1,4 @@
-# Grid Insights by Nima Doroud
+# Grid Insights
 
 Developed as part of the Insight's Data Engineering Fellowship 2020A in Boston, MA.
 
