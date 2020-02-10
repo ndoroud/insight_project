@@ -24,14 +24,23 @@ The data is ingested and stored in an S3 bucket. It is then accessed by a script
 
 The pipeline requires EC2 instances, S3 storage and a PostgreSQL database. The python code requires python3 and imports the following packages: os, io, requests, boto3, psycopg2, sqlalchemy, pandas, functools and datetime. awscli and s3fs are also required. Global variables such as credentials and api keys are imported as environment variables.
 
-
-
-The data is ingested from NREL and through an API from EIA. The [NREL](https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/by_USAFN.html) data -- CSV files listed in the "lists/nrel_filelist.csv" -- are assumed to be in an S3 bucket. These are read by "/src/nrel_s32db.py" running on an EC2 instance which averages the data from all the stations within each region and stores the result in a table in the database.
-
-
-
+The [NREL](https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/by_USAFN.html) data needs to be downloaded and stored in an S3 bucket. It is then processed and stored in the database. The [EIA](https://www.eia.gov/opendata/qb.php?category=2123635) data is ingested by the retriever script, provided a valid api key, and stored in the S3 bucket. It is then read and merged with the processed NREL data and stored in the database. The retrieval of updates and subsequent merging and storage in the database is automated with Apache Nifi.
 
 ## Contents
-- Deployment
-- Application
-- Future directions
+
+The "lists" directory hosts a number of lists such as the 13 grid regions (eba_regions.csv), the list of over a thousand weather stations featured in the NREL dataset (nrel_filelist.csv), list of states plus DC, and their population as of 2010.
+
+The python scripts are hosted in the "src" directory:
+- nrel_s32db.py #Processes the NREL data and stores the result in the database
+- EIA_data_retriever.py #Retrieves data from EIA's API and stores it on S3
+- master.py #Merges the latest EIA data with the processed NREL data and stores the result in the database
+
+The ".sh" files in the root directory run the last two python scripts and can be executed regularly with an "ExecuteStreamCommand" processor in Apache NiFi. A simple NiFi workflow that achieves this is provided.
+
+## Scalability
+
+The task of processing and merging the two datasets can be divided both spatially and temporally meaning the process can be parallelized and distributed over multiple EC2 instances or looped over with a single EC2 instance. Both can be achieved and managed with Apache NiFi. The former would require a more powerful RDS instance as concurrent writes to the m4.large instance used in testing did fail on occasion.
+
+## Future directions
+
+Include live data from the weather stations for monitoring.
