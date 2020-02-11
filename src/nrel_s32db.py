@@ -150,6 +150,8 @@ conn = psycopg2.connect('dbname=main '+psql_settings)
 cur = conn.cursor()
 #
 #
+cur.execute("create table nrel (region varchar(8) not null, time_stamp timestamp not null, ghi real not null, \
+            dni real not null, wind_speed real not null, primary key (region, time_stamp))")
 for region in eba_regions.keys():
     # Commit data from all the stations in the region to memory
     ghi_data = {}
