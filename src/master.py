@@ -4,11 +4,14 @@
 January 2020
 @author: nima
 
-Notes:
-    -leap years (2016, 2020)  -check!
-    -Check for missing data
+This script imports the EIA data from the S3 bucket and the processed NREL data from the database and merges them
+inserting the result into the database. After the initial run which creates two tables in the database and stores
+all available data in the 'data' table, at every subsequent run the new data is compared against the existing data
+and the changes are stored in the 'data_history' table before overwriting the old data with the new data in the 
+main table.
+
 """
-###############################################################################
+#############################################################################################################################################
 #
 #
 import os
@@ -56,7 +59,7 @@ siddict = {"demand":"D","net-generation":"NG","net-generation-solar":"NG.SUN"}
 #
 #
 #
-###############################################################################
+#############################################################################################################################################
 #
 # Define all the functions needed for importing, merging and exporting the data.
 #
@@ -189,7 +192,7 @@ def init_db():
     return None
 #
 #
-###############################################################################
+#############################################################################################################################################
 #
 #
 # Initial run, if the log is empty runs init_db().
@@ -224,7 +227,6 @@ else:
             #
             # Check recent_entries against main_entries for updates
             #
-            pass
             while window_bottom <= window_top:
                 if recent_eq_main(window_bottom):
                     pass
@@ -243,6 +245,7 @@ end_time = str(current_time("s"))
 with open(project_dir+"/logs/log.csv","a") as log_file:
     log_file.write(start_time+", "+end_time+"\n")
 #
+print(end_time)
 #############################################################################################################################################
 #############################################################################################################################################
 #############################################################################################################################################

@@ -3,6 +3,11 @@
 """
 January 2020
 @author: nima
+
+This script takes the NRELs TYA3 dataset from an S3 bucket, converts date and time columns in local timezones
+to standard pandas timestamps in UTC and averages over the weather stations within each grid region. The result
+it stored in a table on our PostgreSQL database.
+
 """
 #############################################################################################################################################
 #
@@ -19,9 +24,6 @@ from functools import reduce
 # Call environment variables
 project_dir = os.getenv("project_dir")
 #
-#nrel_key = os.getenv("nrel_key")
-#eia_key = os.getenv("eia_key")
-#census_key = os.getenv("census_key")
 #
 s3bucket = os.getenv("s3_bucket")
 psql_h = os.getenv("psql_h")
@@ -90,10 +92,15 @@ def stations(region):
     return id_tz_pairs
 #
 #
+# Imports station data from file in S3 bucket, returns a dataframe.
+#
 def from_s3(file_id):
     return pandas.read_csv(StringIO("\n".join(s3.Object(bucket_name=s3bucket[5:], \
             key="nrel/"+file_id+"TYA.CSV").get()['Body'].read().decode("utf-8").split("\r\n")[1:])))
 #
+#
+# Calls from_s3 to import file from S3 and translates the timestamps to pandas standard timestamps, drops extra columns
+# and renames the keys.
 #
 def nrel_data(region,file_id):
     data = from_s3(file_id)[list(nrel_keys.values())].set_axis(['timestamp', 'time', 'ghi_'+file_id, \
@@ -103,7 +110,7 @@ def nrel_data(region,file_id):
 #
 #
 # to_datetime24 takes a timestamp in the MM/DD/YYYY HH:MM-tz (24:00) format, 
-# converts timestamp to pandas datetime and sets the year to year=2010
+# converts timestamp to pandas datetime and sets the year to year=2010. Returns a timestamp.
 #
 def to_datetime24(timestamp,year='2010'):
     if timestamp[11:13] != '24':
@@ -114,6 +121,8 @@ def to_datetime24(timestamp,year='2010'):
         return (pandas.to_datetime(timestamp).tz_convert(tz=None) + timedelta(days=1)).replace(year=2010)
 #
 #
+# formats a dataframe row to be inseted into a table in the database. Returns a string.
+#
 def insert_values(region,ts,df_row):
     values = "'{}','{}'".format(region,ts)
     for key in df_row.keys():
@@ -121,11 +130,17 @@ def insert_values(region,ts,df_row):
     return values
 #
 #
+# Inserts the dataframe rows into the nrel table in the database calling insert_value to format them appropriately.
+# Returns None.
+#
 def insert_into_db(temp_data,temp_region):
     for i in range(len(temp_data)):
         cur.execute("INSERT INTO nrel (region, time_stamp, ghi, dni, wind_speed) VALUES \
                     ({})".format(insert_values(temp_region,temp_data.index[i],temp_data.iloc[i])))
     return None
+#
+#
+#############################################################################################################################################
 #
 #
 start_time = str(current_time("s"))
