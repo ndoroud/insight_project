@@ -109,6 +109,7 @@ end_time = str(current_time("s"))
 # Log:
 with open(project_dir+"/logs/eia_logs.csv","a") as log_file:
     log_file.write(start_time+", "+end_time+"\n")
+print(end_time)
 #
 #
 #
